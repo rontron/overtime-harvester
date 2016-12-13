@@ -37,23 +37,18 @@ def request_time_report(from_date, to_date, harvest_user_id, user_name, pw):
 
 
 def calculate_overtime(harvest_report_json):
+
+    day_entry_list = [item['day_entry'] for item in harvest_report_json]
+    df = pd.DataFrame(day_entry_list)
+    spent_hours_per_day = df.groupby('spent_at')['hours'].sum()
+
     overtime = 0
-
-    harvest_list = [item['day_entry'] for item in harvest_report_json]
-    df = pd.DataFrame(harvest_list)
-    grouped_df = df.groupby('spent_at')['hours'].sum()
-
-    # from IPython import embed
-    # embed()
-
-    for spent_at, worked_hours in grouped_df.iteritems():
+    for spent_at, spent_hours in spent_hours_per_day.iteritems():
         if is_weekend(spent_at):
             # on weekends all work is overtime
-            overtime += worked_hours
-            # print overtime, spent_at, is_weekend(spent_at)
+            overtime += spent_hours
         else:
-            overtime += worked_hours - 8
-            # print overtime, spent_at, is_weekend(spent_at)
+            overtime += spent_hours - 8
 
     return overtime
 
